@@ -5,7 +5,7 @@ module.exports = {
    mode: "production",
    entry: './handler.js',
    target: 'node',
-   externals: [nodeExternals()],
+   // externals: [nodeExternals()],
    output: {
       libraryTarget: 'commonjs',
       path: path.resolve(__dirname, '.webpack'),

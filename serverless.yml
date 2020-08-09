@@ -23,6 +23,12 @@ service: auction-service
 provider:
   name: aws
   runtime: nodejs12.x
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:PutItem
+      Resource:
+       - arn:aws:dynamodb:#{AWS::Region}:#{AWS::AccountId}:table/Auctions-Table
 
 # you can overwrite defaults here
 #  stage: dev
@@ -60,6 +66,11 @@ provider:
 functions:
   hello: # function
     handler: handler.hello
+    description: "hello method"
+    events: # events that trigger this action
+      - http: # creates an API gateway endpoint
+        method: GET
+        path: /auction/hello
   createAuction: #function
     handler: handler.createAuction
     description: "Creates an auction"
@@ -114,6 +125,7 @@ custom:
     excludeFiles: src/**/*.test.js # Provide a glob for files to ignore
 plugins:
   - serverless-webpack
+  - serverless-pseudo-parameters
 # you can add CloudFormation resource templates here
 resources:
  Resources:
