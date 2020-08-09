@@ -30,7 +30,7 @@ const createAuction = async (event) => {
 
   await dynamo
     .put({
-      TableName: 'Auctions-Table',
+      TableName: process.env.AUCTIONS_TABLE_NAME,
       Item: auction,
     })
     .promise();
