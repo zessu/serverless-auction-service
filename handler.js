@@ -1,7 +1,8 @@
 import { v4 as uuid } from 'uuid';
 import AWS from 'aws-sdk';
-import createError, { MethodNotAllowed } from 'http-errors';
+import createError from 'http-errors';
 import commonMiddleware from './commonMiddleware';
+import findAuctionById from './lambdas/getAuction';
 
 const dynamo = new AWS.DynamoDB.DocumentClient();
 
@@ -29,7 +30,7 @@ const createAuction = async (event) => {
     status: 'OPEN',
     createdAt: now.toISOString(),
     highestBid: {
-      amt: 0,
+      amount: 0,
     },
   };
 
@@ -47,6 +48,15 @@ const createAuction = async (event) => {
   return {
     statusCode: 200,
     body: JSON.stringify(auction),
+  };
+};
+
+const getAuction = async (event) => {
+  const { id } = event.pathParameters;
+  const result = await findAuctionById(id);
+  return {
+    statusCode: 200,
+    body: JSON.stringify(result),
   };
 };
 
@@ -68,33 +78,17 @@ const listAuctions = async () => {
   };
 };
 
-const getAuction = async (event) => {
-  const { id } = event.pathParameters;
-  let result;
-  try {
-    result = await dynamo
-      .get({
-        TableName: process.env.AUCTIONS_TABLE_NAME,
-        Key: { id },
-      })
-      .promise();
-  } catch (error) {
-    return new createError.InternalServerError(error);
-  }
-
-  if (!result) { return new createError.NotFound(`could not find aution with id ${id}`); }
-
-  return {
-    statusCode: 200,
-    body: JSON.stringify(result.Item),
-  };
-};
-
 const placeBid = async (event) => {
   const { id } = event.pathParameters;
   const { amount } = event.body;
-
+  const auction = await findAuctionById(id);
+  const highestBid = auction.highestBid.amount;
   let result;
+
+  if (amount <= highestBid) {
+    throw new createError.Forbidden(`your bid must be higher then ${highestBid}`);
+  }
+
   try {
     result = await dynamo
       .update({
@@ -108,12 +102,13 @@ const placeBid = async (event) => {
       })
       .promise();
   } catch (error) {
-    return new createError.InternalServerError(error);
+    throw new createError.InternalServerError(error);
   }
-  const auction = result.Attributes;
+
+  const res = result.Attributes;
   return {
     statusCode: 200,
-    body: JSON.stringify(auction),
+    body: JSON.stringify(res),
   };
 };
 
@@ -121,4 +116,4 @@ exports.hello = commonMiddleware(hello);
 exports.createAuction = commonMiddleware(createAuction);
 exports.listAuctions = commonMiddleware(listAuctions);
 exports.getAuction = commonMiddleware(getAuction);
-exports.getAuction = commonMiddleware(placeBid);
+exports.placeBid = commonMiddleware(placeBid);
