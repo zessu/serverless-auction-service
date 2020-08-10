@@ -1,10 +1,7 @@
 import { v4 as uuid } from 'uuid';
 import AWS from 'aws-sdk';
-import middy from '@middy/core';
-import httpJsonBodyParser from '@middy/http-json-body-parser';
-import httpErrorHandler from '@middy/http-error-handler';
-import httpEventNormalizer from '@middy/http-event-normalizer';
 import createError from 'http-errors';
+import commonMiddleware from './commonMiddleware';
 
 // import { } from '@middy/validator';
 
@@ -92,22 +89,7 @@ const getAuction = async (event) => {
   };
 };
 
-exports.hello = middy(hello)
-  .use(httpJsonBodyParser())
-  .use(httpEventNormalizer())
-  .use(httpErrorHandler());
-
-exports.createAuction = middy(createAuction)
-  .use(httpJsonBodyParser())
-  .use(httpEventNormalizer())
-  .use(httpErrorHandler());
-
-exports.listAuctions = middy(listAuctions)
-  .use(httpJsonBodyParser())
-  .use(httpEventNormalizer())
-  .use(httpErrorHandler());
-
-exports.getAuction = middy(getAuction)
-  .use(httpJsonBodyParser())
-  .use(httpEventNormalizer())
-  .use(httpErrorHandler());
+exports.hello = commonMiddleware(hello);
+exports.createAuction = commonMiddleware(createAuction);
+exports.listAuctions = commonMiddleware(listAuctions);
+exports.getAuction = commonMiddleware(getAuction);
