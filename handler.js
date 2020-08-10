@@ -43,12 +43,30 @@ const createAuction = async (event) => {
       })
       .promise();
   } catch (error) {
-    return new createError.InternalServerError();
+    return new createError.InternalServerError(error);
   }
 
   return {
     statusCode: 200,
     body: JSON.stringify(auction),
+  };
+};
+
+const listAuctions = async () => {
+  let result;
+  try {
+    result = await dynamo
+      .scan({
+        TableName: process.env.AUCTIONS_TABLE_NAME,
+      })
+      .promise();
+  } catch (error) {
+    return new createError.InternalServerError(error);
+  }
+
+  return {
+    statusCode: 200,
+    body: JSON.stringify(result.Items),
   };
 };
 
@@ -58,6 +76,11 @@ exports.hello = middy(hello)
   .use(httpErrorHandler());
 
 exports.createAuction = middy(createAuction)
+  .use(httpJsonBodyParser())
+  .use(httpEventNormalizer())
+  .use(httpErrorHandler());
+
+exports.listAuctions = middy(listAuctions)
   .use(httpJsonBodyParser())
   .use(httpEventNormalizer())
   .use(httpErrorHandler());

@@ -15,15 +15,22 @@ functions:
     description: "hello method"
     events: # events that trigger this action
       - http: # creates an API gateway endpoint
-        method: GET
-        path: /auction/hello
+          method: GET
+          path: /auction/hello
   createAuction: #function
     handler: handler.createAuction
     description: "Creates an auction"
     events: # events that trigger this action
       - http: # creates an API gateway endpoint
-        method: POST
-        path: /auction/create
+          method: POST
+          path: /auction/create
+  listAuctions: #function
+    handler: handler.listAuctions
+    description: "Lists existing auctions"
+    events: # events that trigger this action
+      - http: # creates an API gateway endpoint
+          method: GET
+          path: /auctions
 
 custom:
   webpack:
