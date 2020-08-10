@@ -7,4 +7,3 @@ export default (handler) => middy(handler)
   .use(httpJsonBodyParser())
   .use(httpEventNormalizer())
   .use(httpErrorHandler());
-

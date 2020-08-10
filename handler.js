@@ -1,9 +1,7 @@
 import { v4 as uuid } from 'uuid';
 import AWS from 'aws-sdk';
-import createError from 'http-errors';
+import createError, { MethodNotAllowed } from 'http-errors';
 import commonMiddleware from './commonMiddleware';
-
-// import { } from '@middy/validator';
 
 const dynamo = new AWS.DynamoDB.DocumentClient();
 
@@ -30,6 +28,9 @@ const createAuction = async (event) => {
     title,
     status: 'OPEN',
     createdAt: now.toISOString(),
+    highestBid: {
+      amt: 0,
+    },
   };
 
   try {
@@ -89,7 +90,35 @@ const getAuction = async (event) => {
   };
 };
 
+const placeBid = async (event) => {
+  const { id } = event.pathParameters;
+  const { amount } = event.body;
+
+  let result;
+  try {
+    result = await dynamo
+      .update({
+        TableName: process.env.AUCTIONS_TABLE_NAME,
+        Key: { id },
+        UpdateExpression: 'set highestBid.amount =:amount',
+        ExpressionAttributeValues: {
+          ':amount': amount,
+        },
+        ReturnValues: 'ALL_NEW',
+      })
+      .promise();
+  } catch (error) {
+    return new createError.InternalServerError(error);
+  }
+  const auction = result.Attributes;
+  return {
+    statusCode: 200,
+    body: JSON.stringify(auction),
+  };
+};
+
 exports.hello = commonMiddleware(hello);
 exports.createAuction = commonMiddleware(createAuction);
 exports.listAuctions = commonMiddleware(listAuctions);
 exports.getAuction = commonMiddleware(getAuction);
+exports.getAuction = commonMiddleware(placeBid);

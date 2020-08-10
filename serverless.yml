@@ -38,6 +38,13 @@ functions:
       - http: # creates an API gateway endpoint
           method: GET
           path: /auction/{id}
+  placeBid: #function
+    handler: handler.placeBid
+    description: "places a bid for an auction item"
+    events: # events that trigger this action
+      - http: # creates an API gateway endpoint
+          method: PATCH
+          path: /auction/{id}/bid
 
 custom:
   webpack:
