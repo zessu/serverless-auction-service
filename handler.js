@@ -29,6 +29,7 @@ const createAuction = async (event) => {
     title,
     status: 'OPEN',
     createdAt: now.toISOString(),
+    endingAt: new Date(now.getHours() + 1).toISOString(),
     highestBid: {
       amount: 0,
     },
