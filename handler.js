@@ -70,6 +70,28 @@ const listAuctions = async () => {
   };
 };
 
+const getAuction = async (event) => {
+  const { id } = event.pathParameters;
+  let result;
+  try {
+    result = await dynamo
+      .get({
+        TableName: process.env.AUCTIONS_TABLE_NAME,
+        Key: { id },
+      })
+      .promise();
+  } catch (error) {
+    return new createError.InternalServerError(error);
+  }
+
+  if (!result) { return new createError.NotFound(`could not find aution with id ${id}`); }
+
+  return {
+    statusCode: 200,
+    body: JSON.stringify(result.Item),
+  };
+};
+
 exports.hello = middy(hello)
   .use(httpJsonBodyParser())
   .use(httpEventNormalizer())
@@ -81,6 +103,11 @@ exports.createAuction = middy(createAuction)
   .use(httpErrorHandler());
 
 exports.listAuctions = middy(listAuctions)
+  .use(httpJsonBodyParser())
+  .use(httpEventNormalizer())
+  .use(httpErrorHandler());
+
+exports.getAuction = middy(getAuction)
   .use(httpJsonBodyParser())
   .use(httpEventNormalizer())
   .use(httpErrorHandler());

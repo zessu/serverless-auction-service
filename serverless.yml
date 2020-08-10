@@ -31,6 +31,13 @@ functions:
       - http: # creates an API gateway endpoint
           method: GET
           path: /auctions
+  getAuction: #function
+    handler: handler.getAuction
+    description: "get auction provided auction id"
+    events: # events that trigger this action
+      - http: # creates an API gateway endpoint
+          method: GET
+          path: /auction/{id}
 
 custom:
   webpack:
