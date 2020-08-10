@@ -1,5 +1,12 @@
 import { v4 as uuid } from 'uuid';
 import AWS from 'aws-sdk';
+import middy from '@middy/core';
+import httpJsonBodyParser from '@middy/http-json-body-parser';
+import httpErrorHandler from '@middy/http-error-handler';
+import httpEventNormalizer from '@middy/http-event-normalizer';
+import createError from 'http-errors';
+
+// import { } from '@middy/validator';
 
 const dynamo = new AWS.DynamoDB.DocumentClient();
 
@@ -18,7 +25,7 @@ const hello = async (event) => ({
 // Use this code if you don't use the http event with the LAMBDA-PROXY integration
 // return { message: 'Go Serverless v1.0! Your function executed successfully!', event };
 const createAuction = async (event) => {
-  const { title } = JSON.parse(event.body);
+  const { title } = event.body;
   const now = new Date();
 
   const auction = {
@@ -28,12 +35,16 @@ const createAuction = async (event) => {
     createdAt: now.toISOString(),
   };
 
-  await dynamo
-    .put({
-      TableName: process.env.AUCTIONS_TABLE_NAME,
-      Item: auction,
-    })
-    .promise();
+  try {
+    await dynamo
+      .put({
+        TableName: process.env.AUCTIONS_TABLE_NAME,
+        Item: auction,
+      })
+      .promise();
+  } catch (error) {
+    return new createError.InternalServerError();
+  }
 
   return {
     statusCode: 200,
@@ -41,5 +52,12 @@ const createAuction = async (event) => {
   };
 };
 
-exports.hello = hello;
-exports.createAuction = createAuction;
+exports.hello = middy(hello)
+  .use(httpJsonBodyParser())
+  .use(httpEventNormalizer())
+  .use(httpErrorHandler());
+
+exports.createAuction = middy(createAuction)
+  .use(httpJsonBodyParser())
+  .use(httpEventNormalizer())
+  .use(httpErrorHandler());
